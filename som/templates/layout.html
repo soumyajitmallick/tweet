@@ -1,0 +1,310 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- D3.js for dynamic map and connections -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <title>
+        {% block title %}
+        soumyajit and i
+        {% endblock %}
+    </title>
+    <style>
+      /* Ensure the footer stays at the bottom */
+      body {
+          display: flex;
+          flex-direction: column;
+          min-height: 100vh;
+          margin: 0;
+          background-color: #1a1a1a;
+          position: relative;
+      }
+      .content-wrapper {
+          flex: 1;
+          position: relative;
+          z-index: 1;
+      }
+      .footer {
+          background-color: #172337; /* Flipkart dark blue */
+          color: white;
+          padding: 40px 0;
+          position: relative;
+          z-index: 1;
+      }
+      .footer a {
+          color: #bbb;
+          text-decoration: none;
+      }
+      .footer a:hover {
+          color: #fff;
+      }
+      .search-results {
+          max-height: 200px;
+          overflow-y: auto;
+          width: 300px;
+          top: 50px;
+          left: 0;
+          z-index: 1000;
+      }
+      #map {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0;
+          pointer-events: none; /* Allow clicks to pass through */
+      }
+      .connection {
+          stroke: #0ea5e9;
+          stroke-width: 1.5;
+          opacity: 0.7;
+      }
+      .dot {
+          fill: #0ea5e9;
+          stroke: #fff;
+          stroke-width: 1.5;
+          cursor: pointer;
+      }
+      .pulse {
+          fill: #0ea5e9;
+          opacity: 0.5;
+          animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+          0% {
+              r: 2;
+              opacity: 0.5;
+          }
+          100% {
+              r: 8;
+              opacity: 0;
+          }
+      }
+    </style>
+</head>
+<body>
+    <!-- World Map Background -->
+    <div id="map"></div>
+
+    <!-- Navbar and Content -->
+    <div class="content-wrapper">
+        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Tweetbar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Link</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Dropdown
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+                        </li>
+                    </ul>
+                    <form class="d-flex" role="search" id="search-form">
+                        <input class="form-control me-2" type="text" id="search-input" placeholder="Search Tweets..." aria-label="Search">
+                    </form>
+                    <div class="search-results bg-light border rounded p-2 position-absolute d-none" id="search-results"></div>
+                    <a href="{% url 'tweet_list'%}" class="btn btn-primary mx-2">Tweet Home</a>
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger" type="submit">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'register'%}" class="btn btn-primary mx-2">Register</a>
+                        <a href="{% url 'login'%}" class="btn btn-success mx-2">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-4">
+        <div class="container">
+            <div class="row">
+                <!-- Column 1: About -->
+                <div class="col-md-3">
+                    <h5 class="fw-bold">About</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Our Services</a></li>
+                    </ul>
+                </div>
+                <!-- Column 2: Help -->
+                <div class="col-md-3">
+                    <h5 class="fw-bold">Help</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">How to Post a Tweet</a></li>
+                        <li><a href="#">Editing & Deleting Tweets</a></li>
+                        <li><a href="#">Managing Your Account</a></li>
+                        <li><a href="#">Reporting Issues</a></li>
+                    </ul>
+                </div>
+                <!-- Column 3: Policy -->
+                <div class="col-md-3">
+                    <h5 class="fw-bold">Policy</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Terms of Use</a></li>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Security</a></li>
+                        <li><a href="#">Sitemap</a></li>
+                    </ul>
+                </div>
+                <!-- Column 4: Social -->
+                <div class="col-md-3">
+                    <h5 class="fw-bold">Follow Us</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#"><i class="bi bi-facebook"></i> Facebook</a></li>
+                        <li><a href="#"><i class="bi bi-twitter"></i> Twitter</a></li>
+                        <li><a href="#"><i class="bi bi-instagram"></i> Instagram</a></li>
+                        <li><a href="#"><i class="bi bi-youtube"></i> YouTube</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4 mb-3">
+            <!-- Copyright -->
+            <div class="text-center">
+                <p class="mb-0">© 2025 Soumyajit's Django Project | All Rights Reserved</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // World Map Script
+        document.addEventListener("DOMContentLoaded", function () {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            const svg = d3.select("#map")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            const projection = d3.geoMercator()
+                .scale(150)
+                .translate([width / 2, height / 2]);
+
+            const path = d3.geoPath().projection(projection);
+
+            d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(function (world) {
+                svg.selectAll("path")
+                    .data(world.features)
+                    .enter()
+                    .append("path")
+                    .attr("d", path)
+                    .attr("fill", "#2d2d2d")
+                    .attr("stroke", "#444");
+
+                const dots = [
+                    { name: "New York", lat: 40.7128, lng: -74.006 },
+                    { name: "London", lat: 51.5074, lng: -0.1278 },
+                    { name: "Tokyo", lat: 35.6895, lng: 139.6917 },
+                    { name: "Sydney", lat: -33.8688, lng: 151.2093 },
+                    { name: "Cape Town", lat: -33.9249, lng: 18.4241 },
+                ];
+
+                svg.selectAll(".dot")
+                    .data(dots)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => projection([d.lng, d.lat])[0])
+                    .attr("cy", d => projection([d.lng, d.lat])[1])
+                    .attr("r", 5);
+
+                svg.selectAll(".pulse")
+                    .data(dots)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "pulse")
+                    .attr("cx", d => projection([d.lng, d.lat])[0])
+                    .attr("cy", d => projection([d.lng, d.lat])[1])
+                    .attr("r", 5);
+
+                for (let i = 0; i < dots.length - 1; i++) {
+                    const start = projection([dots[i].lng, dots[i].lat]);
+                    const end = projection([dots[i + 1].lng, dots[i + 1].lat]);
+
+                    svg.append("line")
+                        .attr("class", "connection")
+                        .attr("x1", start[0])
+                        .attr("y1", start[1])
+                        .attr("x2", end[0])
+                        .attr("y2", end[1]);
+                }
+            });
+        });
+
+        // Search Script
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchInput = document.getElementById("search-input");
+            const resultsDiv = document.getElementById("search-results");
+
+            searchInput.addEventListener("keyup", function() {
+                let query = this.value.trim();
+                if (query.length > 0) {
+                    fetch(`/tweet/search/?query=${query}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            resultsDiv.innerHTML = "";
+                            if (data.tweets.length > 0) {
+                                data.tweets.forEach(tweet => {
+                                    let item = document.createElement("div");
+                                    item.classList.add("p-2", "border-bottom");
+                                    item.innerHTML = `<strong>${tweet.user}</strong>: ${tweet.text}`;
+                                    resultsDiv.appendChild(item);
+                                });
+                                resultsDiv.classList.remove("d-none");
+                            } else {
+                                resultsDiv.innerHTML = "<div class='p-2'>No results found.</div>";
+                                resultsDiv.classList.remove("d-none");
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching search results:', error);
+                            resultsDiv.innerHTML = "<div class='p-2 text-danger'>Error loading results.</div>";
+                            resultsDiv.classList.remove("d-none");
+                        });
+                } else {
+                    resultsDiv.classList.add("d-none");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

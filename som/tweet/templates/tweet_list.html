@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Soumyajit and I
+{% endblock %}
+
+{% block content %}
+
+<!-- Header Section -->
+<div class="text-center my-4">
+    <h1 class="fw-bold text-primary">Welcome to <span class="text-gradient">Soumyajit's Django Project</span></h1>
+    <a class="btn btn-success mt-3" href="{% url 'tweet_create' %}">➕ Create a Tweet</a>
+</div>
+
+<!-- Tweets Section -->
+<div class="container">
+    <h2 class="text-center mb-4">Latest Tweets</h2>
+
+    {% if tweets %}
+    <div class="row g-4">
+        {% for tweet in tweets %}
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 rounded-4">
+                {% if tweet.photo %}
+                    <img src="{{ tweet.photo.url }}" class="card-img-top rounded-top-4" alt="Tweet image">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title text-dark fw-bold">@{{ tweet.user.username }}</h5>
+                    <p class="card-text text-muted">{{ tweet.text }}</p>
+                    {% if tweet.user == user %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'tweet_edit' tweet.id %}" class="btn btn-outline-primary">✏ Edit</a>
+                            <a href="{% url 'tweet_delete' tweet.id %}" class="btn btn-outline-danger">🗑 Delete</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="text-center text-danger mt-4">
+            <h4>No Tweets Found</h4>
+            <p>Try searching for something else!</p>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
